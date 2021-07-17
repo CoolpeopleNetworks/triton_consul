@@ -1,0 +1,3 @@
+.terraform
+triton.tf
+defaults.auto.tfvars
