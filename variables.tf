@@ -17,6 +17,9 @@ variable "server_replicas" {
 variable "dns_suffix" {
 }
 
+variable "cns_suffix" {
+}
+
 variable "datacenter_name" {
 }
 

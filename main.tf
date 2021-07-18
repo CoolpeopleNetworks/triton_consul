@@ -1,3 +1,5 @@
+data "triton_account" "main" {}
+
 data "triton_image" "os" {
     name = "debian-9-cloudinit"
     version = "1.0.0"
@@ -27,7 +29,7 @@ resource "triton_machine" "consul" {
         consul_nic_tag = var.consul_nic_tag
         dns_suffix = var.dns_suffix,
         datacenter_name = var.datacenter_name
-        retry_join = "provider=triton account=${var.triton_account} url=${var.triton_api_url} key_id=${var.triton_key_id} tag_key=consul-role tag_value=server",
+        retry_join = "consul.svc.${data.triton_account.main.id}.${var.cns_suffix}"
         server_replicas = var.server_replicas
     })
 }

@@ -85,6 +85,8 @@ runcmd:
   - chmod -R 775 /var/lib/consul
   - mkdir /etc/consul.d
   - chown -R consul:consul /etc/consul.d
+  - systemctl enable consul.service
+  - systemctl start --no-block consul.service
 
 fqdn: {{ds.meta_data.hostname}}.${dns_suffix}
 
@@ -105,13 +107,19 @@ write_files:
           "node_name": "{{ds.meta_data.hostname}}",
           "server": true,
           "bootstrap_expect": ${server_replicas},
+          "enable_syslog": true,
           "addresses": { 
               "http": "0.0.0.0" 
           },
           "ports": { 
               "http": 8501 
           },
-          "ui": true,
+          "ui_config": {
+            "enabled": true
+          },
+          "telemetry": { 
+            "disable_compat_1.9": true 
+          },
           "bind_addr": "{{ds.meta_data.network_data | selectattr("nic_tag", "equalto", "${consul_nic_tag}") | map(attribute="ip") | first}}",
           "client_addr": "{{ds.meta_data.network_data | selectattr("nic_tag", "equalto", "${consul_nic_tag}") | map(attribute="ip") | first}}",
           "retry_join": ["${retry_join}"],
