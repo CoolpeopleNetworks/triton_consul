@@ -1,5 +1,9 @@
 data "triton_account" "main" {}
 
+resource "random_id" "encryption_key" {
+    byte_length = 32
+}
+
 data "triton_image" "os" {
     name = "debian-9-cloudinit"
     version = "1.0.0"
@@ -31,5 +35,6 @@ resource "triton_machine" "consul" {
         datacenter_name = var.datacenter_name
         retry_join = "consul.svc.${data.triton_account.main.id}.${var.cns_suffix}"
         server_replicas = var.server_replicas
+        encryption_key = random_id.encryption_key.b64_std
     })
 }

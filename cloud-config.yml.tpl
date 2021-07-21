@@ -120,6 +120,7 @@ write_files:
           "telemetry": { 
             "disable_compat_1.9": true 
           },
+          "encrypt": "${encryption_key}",
           "bind_addr": "{{ds.meta_data.network_data | selectattr("nic_tag", "equalto", "${consul_nic_tag}") | map(attribute="ip") | first}}",
           "client_addr": "{{ds.meta_data.network_data | selectattr("nic_tag", "equalto", "${consul_nic_tag}") | map(attribute="ip") | first}}",
           "retry_join": ["${retry_join}"],
@@ -127,7 +128,7 @@ write_files:
           "dns_config": {
               "enable_truncate": true,
               "udp_answer_limit": 100,
-          }})}
+          }
       }
   - path: /etc/systemd/system/consul.service
     content: |
