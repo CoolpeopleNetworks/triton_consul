@@ -1,12 +1,3 @@
-variable "triton_account" {
-}
-
-variable "triton_key_id" {
-}
-
-variable "triton_api_url" {
-}
-
 variable "server_package" {
 }
 
