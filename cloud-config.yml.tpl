@@ -98,38 +98,64 @@ mounts:
  - [ vdb, null ]
 
 write_files:
+  - path: /etc/consul.d/ca.pem
+    encoding: base64
+    content: ${base64encode(ca_certificate)}
+
+  - path: /etc/consul.d/cert.pem
+    encoding: base64
+    content: ${base64encode(certificate)}
+
+  - path: /etc/consul.d/private_key.pem
+    encoding: base64
+    content: ${base64encode(private_key)}
+
   - path: /etc/consul.d/config.hcl
     content: |
       {
-          "datacenter": "${datacenter_name}",
-          "data_dir": "/var/lib/consul",
-          "log_level": "INFO",
-          "node_name": "{{ds.meta_data.hostname}}",
-          "server": true,
-          "bootstrap_expect": ${server_replicas},
-          "enable_syslog": true,
-          "addresses": { 
-              "http": "0.0.0.0" 
-          },
-          "ports": { 
-              "http": 8501 
-          },
-          "ui_config": {
-            "enabled": true
-          },
-          "telemetry": { 
-            "disable_compat_1.9": true 
-          },
-          "encrypt": "${encryption_key}",
-          "bind_addr": "{{ds.meta_data.network_data | selectattr("nic_tag", "equalto", "${consul_nic_tag}") | map(attribute="ip") | first}}",
-          "client_addr": "{{ds.meta_data.network_data | selectattr("nic_tag", "equalto", "${consul_nic_tag}") | map(attribute="ip") | first}}",
-          "retry_join": ["${retry_join}"],
-          "alt_domain": "${dns_suffix}",
-          "dns_config": {
-              "enable_truncate": true,
-              "udp_answer_limit": 100,
+        "datacenter": "${datacenter_name}",
+        "data_dir": "/var/lib/consul",
+        "log_level": "INFO",
+        "node_name": "{{ds.meta_data.hostname}}",
+        "server": true,
+        "bootstrap_expect": ${server_replicas},
+        "enable_syslog": true,
+        "addresses": { 
+            "https": "0.0.0.0" 
+        },
+        "ports": { 
+            "https": 8501 
+        },
+        "ui_config": {
+          "enabled": true
+        },
+        "telemetry": { 
+          "disable_compat_1.9": true 
+        },
+        "encrypt": "${encryption_key}",
+        "bind_addr": "{{ds.meta_data.network_data | selectattr("nic_tag", "equalto", "${consul_nic_tag}") | map(attribute="ip") | first}}",
+        "client_addr": "127.0.0.1 {{ds.meta_data.network_data | selectattr("nic_tag", "equalto", "${consul_nic_tag}") | map(attribute="ip") | first}}",
+        "retry_join": ["${retry_join}"],
+        "alt_domain": "${dns_suffix}",
+        "dns_config": {
+            "enable_truncate": true,
+            "udp_answer_limit": 100,
+        },
+        "ca_file": "/etc/consul.d/ca.pem",
+        "cert_file": "/etc/consul.d/cert.pem",
+        "key_file": "/etc/consul.d/private_key.pem",
+        "verify_incoming": false,
+        "verify_outgoing": true,
+        "verify_server_hostname": true,
+        "acl": {
+          "enabled": true
+          "default_policy": "deny"
+          "tokens": {
+              "master": "${master_token}"
           }
+        }
       }
+      
   - path: /etc/systemd/system/consul.service
     content: |
       [Unit]
