@@ -1,3 +1,7 @@
+locals {
+    consul_version="1.10.1"
+}
+
 data "triton_account" "main" {}
 
 # Create the Consul certificates
@@ -51,8 +55,8 @@ resource "random_id" "encryption_key" {
 }
 
 data "triton_image" "os" {
-    name = "debian-9-cloudinit"
-    version = "1.0.0"
+    name = "base-64-lts"
+    version = "20.4.0"
 }
 
 resource "triton_machine" "consul" {
@@ -76,19 +80,72 @@ resource "triton_machine" "consul" {
     
     affinity = ["consul-role!=~server"]
 
-    cloud_config = templatefile("${path.module}/cloud-config.yml.tpl", {
-        dns_suffix = var.config.network.domain_name,
-        datacenter_name = var.config.network.datacenter_name
-        retry_join = "consul.svc.${data.triton_account.main.id}.${var.config.network.cns_suffix}"
-        server_replicas = var.config.server_replicas
-        encryption_key = random_id.encryption_key.b64_std
+    connection {
+        host = self.primaryip
+    }
 
-        ca_certificate = var.config.certificate_authority.certificate_pem
-        certificate = tls_locally_signed_cert.consul[count.index].cert_pem
-        private_key = tls_private_key.consul[count.index].private_key_pem
-        master_token = var.config.master_token
-        upstream_dns_server = var.config.network.dns_server
-    })
+    provisioner "remote-exec" {
+        inline = [
+            "mkdir -p /opt/local/etc/consul.d/certificates",
+            "mkdir -p /opt/local/consul",
+            "useradd -d /opt/local/consul consul",
+            "groupadd consul",
+            "chown consul /opt/local/consul",
+            "chgrp consul /opt/local/consul",
+        ]
+    } 
+
+    provisioner "file" {
+        content = var.config.certificate_authority.certificate_pem
+        destination = "/opt/local/etc/consul.d/certificates/ca.pem"
+    }
+
+    provisioner "file" {
+        content = tls_locally_signed_cert.consul[count.index].cert_pem
+        destination = "/opt/local/etc/consul.d/certificates/cert.pem"
+    }
+
+    provisioner "file" {
+        content = tls_private_key.consul[count.index].private_key_pem
+        destination = "/opt/local/etc/consul.d/certificates/private_key.pem"
+    }
+
+    provisioner "file" {
+        source = "${path.module}/consul.xml"
+        destination = "/opt/consul.xml"
+    }
+
+    provisioner "file" {
+        content = templatefile("${path.module}/templates/consul.hcl.tpl", {
+            datacenter_name = var.config.network.datacenter_name,
+            domain_name = var.config.network.domain_name,
+            node_name = "consul-${count.index}",
+            bootstrap_expect = var.config.server_replicas,
+            rejoin_addresses = ["consul.svc.${data.triton_account.main.id}.${var.config.network.cns_suffix}"],
+            encryption_key = random_id.encryption_key.b64_std,
+            upstream_dns_servers = var.config.network.dns_servers,
+        })
+        destination = "/opt/local/etc/consul.d/consul.hcl"
+    }
+
+    provisioner "remote-exec" {
+        inline = [
+            "svcadm disable inetd", # Disable inetd since consul will need to run on DNS port 53.
+            "pkgin -y update",
+            "pkgin -y in wget unzip",
+            "cd /tmp ; wget --no-check-certificate https://releases.hashicorp.com/consul/${local.consul_version}/consul_${local.consul_version}_solaris_amd64.zip",
+            "cd /tmp ; unzip consul_${local.consul_version}_solaris_amd64.zip",
+            "touch /tmp/checkpoint.0",
+            "cd /tmp ; rm consul_${local.consul_version}_solaris_amd64.zip",
+            "touch /tmp/checkpoint.1",
+
+            "mv /tmp/consul /opt/local/bin/consul",
+            "touch /tmp/checkpoint.2",
+
+            "svccfg import /opt/consul.xml",
+            "touch /tmp/checkpoint.3",
+        ]
+    }
 }
 
 output "consul_master_token" {
