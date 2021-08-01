@@ -141,7 +141,7 @@ write_files:
             "enable_truncate": true,
             "udp_answer_limit": 100,
         },
-        "recursors": "${upstream_dns_server}",
+        "recursors": ["${upstream_dns_server}"],
         "ca_file": "/etc/consul.d/ca.pem",
         "cert_file": "/etc/consul.d/cert.pem",
         "key_file": "/etc/consul.d/private_key.pem",
