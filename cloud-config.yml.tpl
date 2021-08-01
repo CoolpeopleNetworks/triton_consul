@@ -110,7 +110,7 @@ write_files:
     encoding: base64
     content: ${base64encode(private_key)}
 
-  - path: /etc/consul.d/config.hcl
+  - path: /etc/consul.d/consul.hcl
     content: |
       {
         "datacenter": "${datacenter_name}",
@@ -148,13 +148,6 @@ write_files:
         "verify_incoming": false,
         "verify_outgoing": true,
         "verify_server_hostname": true,
-        "acl": {
-          "enabled": false
-          "default_policy": "deny"
-          "tokens": {
-              "master": "${master_token}"
-          }
-        }
       }
       
   - path: /etc/systemd/system/consul.service
