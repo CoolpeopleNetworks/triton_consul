@@ -133,14 +133,15 @@ write_files:
           "disable_compat_1.9": true 
         },
         "encrypt": "${encryption_key}",
-        "bind_addr": "{{ds.meta_data.network_data | selectattr("nic_tag", "equalto", "${consul_nic_tag}") | map(attribute="ip") | first}}",
-        "client_addr": "127.0.0.1 {{ds.meta_data.network_data | selectattr("nic_tag", "equalto", "${consul_nic_tag}") | map(attribute="ip") | first}}",
+        "bind_addr": "0.0.0.0",
+        "client_addr": "0.0.0.0",
         "retry_join": ["${retry_join}"],
         "alt_domain": "${dns_suffix}",
         "dns_config": {
             "enable_truncate": true,
             "udp_answer_limit": 100,
         },
+        "recursors": "${upstream_dns_server}",
         "ca_file": "/etc/consul.d/ca.pem",
         "cert_file": "/etc/consul.d/cert.pem",
         "key_file": "/etc/consul.d/private_key.pem",
@@ -148,7 +149,7 @@ write_files:
         "verify_outgoing": true,
         "verify_server_hostname": true,
         "acl": {
-          "enabled": true
+          "enabled": false
           "default_policy": "deny"
           "tokens": {
               "master": "${master_token}"

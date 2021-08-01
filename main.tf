@@ -67,7 +67,6 @@ resource "triton_machine" "consul" {
     }
 
     networks = [
-        data.triton_network.public.id,
         data.triton_network.private.id
     ]
 
@@ -78,7 +77,6 @@ resource "triton_machine" "consul" {
     affinity = ["consul-role!=~server"]
 
     cloud_config = templatefile("${path.module}/cloud-config.yml.tpl", {
-        consul_nic_tag = var.config.consul_nic_tag
         dns_suffix = var.config.network.domain_name,
         datacenter_name = var.config.network.datacenter_name
         retry_join = "consul.svc.${data.triton_account.main.id}.${var.config.network.cns_suffix}"
@@ -89,6 +87,7 @@ resource "triton_machine" "consul" {
         certificate = tls_locally_signed_cert.consul[count.index].cert_pem
         private_key = tls_private_key.consul[count.index].private_key_pem
         master_token = var.config.master_token
+        upstream_dns_server = var.config.network.dns_server
     })
 }
 
