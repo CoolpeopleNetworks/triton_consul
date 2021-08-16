@@ -135,20 +135,16 @@ resource "triton_machine" "consul" {
             "pkgin -y in wget unzip",
             "cd /tmp ; wget --no-check-certificate https://releases.hashicorp.com/consul/${local.consul_version}/consul_${local.consul_version}_solaris_amd64.zip",
             "cd /tmp ; unzip consul_${local.consul_version}_solaris_amd64.zip",
-            "touch /tmp/checkpoint.0",
             "cd /tmp ; rm consul_${local.consul_version}_solaris_amd64.zip",
-            "touch /tmp/checkpoint.1",
 
             "mv /tmp/consul /opt/local/bin/consul",
-            "touch /tmp/checkpoint.2",
 
             "svccfg import /opt/consul.xml",
-            "touch /tmp/checkpoint.3",
         ]
     }
 }
 
-output "consul_master_token" {
+output "consul_encryption_key" {
     sensitive = true
-    value = var.config.master_token
+    value = random_id.encryption_key.b64_std
 }
