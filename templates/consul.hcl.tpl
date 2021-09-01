@@ -9,6 +9,7 @@
         "https": "0.0.0.0" 
     },
     "ports": { 
+        "http": -1,
         "https": 8501 
     },
     "ui_config": {
@@ -32,5 +33,5 @@
     "key_file": "/opt/local/etc/consul.d/certificates/private_key.pem",
     "verify_incoming": false,
     "verify_outgoing": false,
-    "verify_server_hostname": false,
+    "verify_server_hostname": true,
 }

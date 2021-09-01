@@ -26,7 +26,7 @@ resource "tls_cert_request" "consul-req" {
     ]
 
     subject {
-        common_name  = "consul.local"
+        common_name = "server.${var.config.network.datacenter_name}.consul"
         organization = var.config.organization.name
     }
 }
