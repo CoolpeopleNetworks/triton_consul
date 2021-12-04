@@ -2,6 +2,8 @@ locals {
     consul_version="1.10.1"
 }
 
+resource "random_uuid" "master_token" {}
+
 data "triton_account" "main" {}
 
 # Create the Consul certificates
@@ -144,7 +146,12 @@ resource "triton_machine" "consul" {
     }
 }
 
-output "consul_encryption_key" {
+output "master_token" {
+    sensitive = true
+    value = random_uuid.master_token.result
+}
+
+output "encryption_key" {
     sensitive = true
     value = random_id.encryption_key.b64_std
 }

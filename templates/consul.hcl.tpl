@@ -34,4 +34,12 @@
     "verify_incoming": false,
     "verify_outgoing": false,
     "verify_server_hostname": true,
+    "tokens": {
+        "master": "${master_token}"
+    },
+    "acl": {
+        "enabled": falses
+        "default_policy": "deny"
+        "enable_token_persistence": true
+    }
 }
